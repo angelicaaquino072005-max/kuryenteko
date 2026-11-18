@@ -18,7 +18,8 @@ export interface Interval {
   from: Reading;
   to: Reading;
   kwh: number;
-  days: number;
+  days: number; // at least 1, used for the daily average
+  realDays: number; // actual time between the two readings
   perDay: number;
 }
 
@@ -28,8 +29,9 @@ export function intervals(readings: Reading[]): Interval[] {
     const from = readings[i - 1];
     const to = readings[i];
     const kwh = Math.max(0, to.value - from.value);
-    const days = Math.max((new Date(to.at).getTime() - new Date(from.at).getTime()) / DAY, 1);
-    out.push({ from, to, kwh, days, perDay: kwh / days });
+    const realDays = (new Date(to.at).getTime() - new Date(from.at).getTime()) / DAY;
+    const days = Math.max(realDays, 1);
+    out.push({ from, to, kwh, days, realDays, perDay: kwh / days });
   }
   return out;
 }
@@ -42,6 +44,7 @@ export function cycleSummary(readings: Reading[], settings: Settings, now: Date)
     latest,
     baseline: null as Reading | null,
     hasUsage: false,
+    canProject: false,
     kwh: 0,
     perDay: 0,
     projectedKwh: 0,
@@ -60,17 +63,20 @@ export function cycleSummary(readings: Reading[], settings: Settings, now: Date)
   if (latest.id === baseline.id || elapsedDays <= 0) return { ...empty, baseline };
 
   const kwh = Math.max(0, latest.value - baseline.value);
+  // A forecast from less than 3 days of readings is mostly noise, so do not show one.
+  const canProject = elapsedDays >= 3;
   const perDay = kwh / Math.max(elapsedDays, 1);
-  const projectedKwh = perDay * cycle.days;
+  const projectedKwh = canProject ? perDay * cycle.days : 0;
   return {
     cycle,
     latest,
     baseline,
     hasUsage: true,
+    canProject,
     kwh,
     perDay,
     projectedKwh,
     billToDate: estimateBill(kwh, settings.rate, settings.fixed) as number,
-    projectedBill: estimateBill(projectedKwh, settings.rate, settings.fixed) as number,
+    projectedBill: canProject ? (estimateBill(projectedKwh, settings.rate, settings.fixed) as number) : 0,
   };
 }

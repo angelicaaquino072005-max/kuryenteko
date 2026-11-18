@@ -22,7 +22,7 @@ function DashboardView() {
   const [now] = useState(() => new Date());
 
   const s = useMemo(() => cycleSummary(readings, settings, now), [readings, settings, now]);
-  const series = useMemo(() => intervals(readings), [readings]);
+ const series = useMemo(() => intervals(readings).filter((i) => i.realDays >= 1), [readings]);
   const recent = [...readings].reverse().slice(0, 4);
 
   const pct = settings.budget > 0 ? Math.round((s.billToDate / settings.budget) * 100) : 0;
@@ -107,8 +107,8 @@ function DashboardView() {
               <dd className="mt-1 text-lg font-semibold">{s.hasUsage ? fmtPeso(s.billToDate) : "—"}</dd>
             </div>
             <div>
-              <dt className="text-white/70">Projected by {fmtShort(cycleLastDay)}</dt>
-              <dd className="mt-1 text-lg font-semibold">{s.hasUsage ? fmtPeso(s.projectedBill) : "—"}</dd>
+              <dt className="text-white/70">Projected by {fmtShort(cycleLastDay)}{!s.canProject && s.hasUsage ? " (needs 3+ days)" : ""}</dt>
+              <dd className="mt-1 text-lg font-semibold">{s.canProject ? fmtPeso(s.projectedBill) : "—"}</dd>
             </div>
             <div>
               <dt className="text-white/70">Last reading</dt>
