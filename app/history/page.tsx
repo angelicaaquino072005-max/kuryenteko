@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, ImageIcon, NotebookPen, Trash2 } from "lucide-react";
+import { Camera, Download, ImageIcon, NotebookPen, Trash2 } from "lucide-react";
 import { ActionButtons, PageHeader } from "@/components/PageHeader";
 import { Modal } from "@/components/Modal";
 import { useUI } from "@/components/ui-context";
 import { deleteReading, useStore } from "@/lib/store";
+import { downloadCsv } from "@/lib/exportCsv";
 import { fmtDate, fmtKwh, fmtReading, fmtTime } from "@/lib/format";
 import type { Reading } from "@/lib/types";
 
@@ -39,7 +40,18 @@ function HistoryView() {
       <PageHeader
         subtitle="Reading log"
         title="Reading history"
-        actions={<ActionButtons onManual={openManual} onScan={openScan} scanLabel="New scan" />}
+        actions={
+          <>
+            <button
+              onClick={() => downloadCsv(readings)}
+              disabled={readings.length === 0}
+              className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-semibold hover:bg-cream disabled:opacity-40"
+            >
+              <Download className="size-4" /> Export CSV
+            </button>
+            <ActionButtons onManual={openManual} onScan={openScan} scanLabel="New scan" />
+          </>
+        }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

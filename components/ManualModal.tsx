@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { Modal } from "./Modal";
 import { Notice } from "./Notice";
+import { UsagePreview } from "./UsagePreview";
 import { addReading, useStore } from "@/lib/store";
 import { checkReading } from "@/lib/validate";
-import { fmtDate, fmtReading, parseNum, toLocalInput } from "@/lib/format";
+import { parseNum, toLocalInput } from "@/lib/format";
 
 export function ManualModal({ onClose }: { onClose: () => void }) {
   const { readings, settings } = useStore();
@@ -31,7 +32,7 @@ export function ManualModal({ onClose }: { onClose: () => void }) {
     <Modal title="Enter meter reading" subtitle="Manual input" onClose={onClose}>
       <p className="mb-5 text-sm text-mute">
         Use this when the camera is unavailable or you want to log a reading yourself.
-        {settings.meterType === "analog" && " Read the dials from left to right and skip any decimal dial."}
+        {settings.meterType === "analog" && " Read the dials from left to right and skip any red dial."}
       </p>
 
       <label className="block">
@@ -54,24 +55,12 @@ export function ManualModal({ onClose }: { onClose: () => void }) {
         <input
           type="datetime-local"
           value={when}
-          max={toLocalInput(new Date())}
           onChange={(e) => setWhen(e.target.value)}
           className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5"
         />
       </label>
 
-      <dl className="mt-5 divide-y divide-line border-y border-line text-sm">
-        <div className="flex justify-between py-3">
-          <dt className="text-mute">Previous reading</dt>
-          <dd className="font-medium">
-            {check.previous ? `${fmtReading(check.previous.value)} kWh · ${fmtDate(check.previous.at)}` : "None yet"}
-          </dd>
-        </div>
-        <div className="flex justify-between py-3">
-          <dt className="text-mute">Usage since then</dt>
-          <dd className="font-medium">{check.consumption !== null ? `+${check.consumption} kWh` : "—"}</dd>
-        </div>
-      </dl>
+      <UsagePreview readings={readings} settings={settings} at={iso} value={value} check={check} />
 
       {touched && (
         <div className="mt-4">
